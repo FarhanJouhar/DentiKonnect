@@ -1,7 +1,23 @@
 # The python script for handling data input.
-Patient_ID = 1000 #tokens start from 1000
+import os
+STORAGE_PATH = "Storage Data"
+ID_FILE = os.path.join(STORAGE_PATH, "patient_id.txt")
+#The Storage Data folder is created here, within which the patient_id.txt file exists to permanently store the current ID.
+os.makedirs(STORAGE_PATH, exist_ok=True)
+if not os.path.exists(ID_FILE):
+  with open(ID_FILE, "w") as id_file:
+    id_file.write("1000")
+#The get_patient_id function reads the current patient ID and increments it by 1 for each use
+def get_patient_id():
+  with open(ID_FILE, "r") as id_file:
+    current_id = int(id_file.read().strip())
+  new_id = current_id + 1
+  with open(ID_FILE, "w") as id_file:
+    id_file.write(str(new_id))
+  return new_id
+#Checks the patient data for valid input
 def process_patient_data(name, age):
-  global Patient_ID
+  Patient_ID = get_patient_id()
   if not name.strip():
     return "Error: Name cannot be blank" 
   if name.isdigit():
@@ -15,5 +31,4 @@ def process_patient_data(name, age):
   if int(age) <= 0:
     return "Error: Please enter a valid age! (e.g., 25)"
   name = name.title() #Capitalize the first letter of each word in the name
-  Patient_ID +=1
   return name, age, Patient_ID
