@@ -6,6 +6,7 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 storage_path = os.path.join(base_dir, "Storage Data") # Creates the storage directory if it doesn't already exist
 os.makedirs(storage_path, exist_ok=True)
 from patient_manager import process_patient_data #function that checks the input
+from patient_manager import save_patient_data #function that saves the patient data to a folder
 def submit_data():
   name = name_input.get()
   age = age_input.get()
@@ -14,6 +15,7 @@ def submit_data():
     result_label.config(text=result, fg="red") #Display error message in red
   else:
     name, age, patient_id = result
+    save_patient_data(name, age, patient_id)
     result_label.config(text=f"Patient ID: {patient_id}\nName: {name}\nAge: {age}", fg="green") #Display success message in green
 def upload_image():
   file_path = tk.filedialog.askopenfilename(

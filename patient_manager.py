@@ -32,3 +32,13 @@ def process_patient_data(name, age):
     return "Error: Please enter a valid age! (e.g., 25)"
   name = name.title() #Capitalize the first letter of each word in the name
   return name, age, Patient_ID
+#The module to save the patient data to a folder that is alphabetized based on the first letter of the patient's name.
+def save_patient_data(name, age, patient_id):
+  first_letter = name[0].upper()
+  folder_path = os.path.join(STORAGE_PATH, first_letter)
+  os.makedirs(folder_path, exist_ok=True)
+  file_path = os.path.join(folder_path, f"{patient_id}.txt")
+  with open(file_path, "w") as file:
+    file.write(f"Patient ID: {patient_id}\n")
+    file.write(f"Name: {name}\n")
+    file.write(f"Age: {age}\n")
