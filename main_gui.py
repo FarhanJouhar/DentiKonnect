@@ -1,27 +1,34 @@
 import tkinter as tk
 from tkinter import filedialog
-import os
-import shutil
-base_dir = os.path.dirname(os.path.abspath(__file__))
-storage_path = os.path.join(base_dir, "Storage Data") # Creates the storage directory if it doesn't already exist
-os.makedirs(storage_path, exist_ok=True)
-from patient_manager import process_patient_data #function that checks the input
-from patient_manager import save_patient_data #function that saves the patient data to a folder
+from patient_manager import process_patient_data, save_patient_to_db, create_db
+create_db()
+
+#Function to upload the xray image
+def upload_image():
+    global current_xray_path
+    path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.jpeg")])
+    if path:
+        current_xray_path = path
+        upload_button.config(text="Image Selected", fg="blue")
+
+#Function to submit the data after going through process_patient_data for validation and then to database using save_patient_to_db
 def submit_data():
   name = name_input.get()
   age = age_input.get()
   result = process_patient_data(name, age)
   if isinstance(result, str):
-    result_label.config(text=result, fg="red") #Display error message in red
+    result_label.config(text=result, fg="red")
   else:
-    name, age, patient_id = result
-    save_patient_data(name, age, patient_id)
-    result_label.config(text=f"Patient ID: {patient_id}\nName: {name}\nAge: {age}", fg="green") #Display success message in green
-def upload_image():
-  file_path = tk.filedialog.askopenfilename(
-    title="Select Patient X-Ray",
-    filetypes=[("Standard Image", "*.jpg *.png"), ("Medical Images", "*.tiff"), ("All Files", "*.*") ]
-  )    
+    clean_name, clean_age = result
+    xray_blob = None
+    if 'current_xray_path' in globals() and current_xray_path:
+      with open(current_xray_path, "rb") as file:
+        xray_blob = file.read()
+    new_id = save_patient_to_db(clean_name, clean_age, xray_blob)
+    result_label.config(text=f"Success!\nPatient Name: {clean_name}, Patient Age: {clean_age} \nPatient ID: P{new_id}", fg="green")
+    upload_button.config(text="Upload X-Ray Image", fg="black")
+
+#The main GUI code for the application
 app = tk.Tk()
 app.title("Dentikonnect")
 app.geometry("375x250")
