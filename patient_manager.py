@@ -61,3 +61,15 @@ def process_patient_data(name, age):
     return "Error: Please enter a valid age! (e.g., 25)"
   name = name.title()
   return name, age
+
+#Function to search for a patient in the database using their name or ID
+def search_patient(user_input):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if user_input.isdigit():
+        cursor.execute("SELECT id, name, age FROM patients WHERE id = ?", (int(user_input),))
+    else:
+        cursor.execute("SELECT id, name, age FROM patients WHERE name LIKE ?", (f"%{user_input}%",))
+    results = cursor.fetchall()
+    conn.close()
+    return results
