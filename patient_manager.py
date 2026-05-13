@@ -5,6 +5,7 @@ sqlite3 was used instead of SQLcypher because it is a built-in library in python
 However, there is a lack of encryption in sqlite3, which will be a concern for future development and will be addressed later"""
 import sqlite3
 import os
+import base64
 
 #The database will be stored inside the following Database folder, which is created if it doesn't exist
 def get_db_connection():
@@ -33,12 +34,16 @@ def create_db():
 
 #Saves the patient data to the database, including the name, age, and x-ray image
 def save_patient_to_db(name, age, xray_blob):
+    # Encrypt everything
+    enc_name = encrypt_data(name.encode()) 
+    enc_age = encrypt_data(str(age).encode())
+    enc_xray = encrypt_data(xray_blob) if xray_blob else None
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO patients (name, age, xray)
         VALUES (?, ?, ?)
-    """, (name, int(age), xray_blob))
+    """, (enc_name, enc_age, enc_xray))
     #Get the ID of the newly inserted patient record
     patient_id = cursor.lastrowid
     conn.commit()
@@ -62,14 +67,44 @@ def process_patient_data(name, age):
   name = name.title()
   return name, age
 
+#We will be trying a simple XOR cipher for encrypting the patient data, which is not the most secure method but serves as a basic example of encryption.
+#For this university prototype, a static XOR key is used.
+#In a production environment, this would be replaced with AES-256 
+#and the key would be managed via an environment variable or Vault.
+SECRET_KEY = "THD_DNTIKNKT_ENCR_2026"
+
+def xor_cipher(data, key):
+    key_bytes = key.encode()
+    # We use a bytearray to perform the XOR math on each byte
+    return bytes([data[i] ^ key_bytes[i % len(key_bytes)] for i in range(len(data))])
+
+def encrypt_data(raw_bytes):
+    scrambled = xor_cipher(raw_bytes, SECRET_KEY)
+    return base64.b64encode(scrambled)
+
+def decrypt_data(encoded_data):
+    scrambled = base64.b64decode(encoded_data)
+    return xor_cipher(scrambled, SECRET_KEY)
+
 #Function to search for a patient in the database using their name or ID
 def search_patient(user_input):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if user_input.isdigit():
-        cursor.execute("SELECT id, name, age FROM patients WHERE id = ?", (int(user_input),))
-    else:
-        cursor.execute("SELECT id, name, age FROM patients WHERE name LIKE ?", (f"%{user_input}%",))
-    results = cursor.fetchall()
-    conn.close()
-    return results
+  conn = get_db_connection()
+  cursor = conn.cursor()
+  cursor.execute("SELECT id, name, age, xray FROM patients")
+  rows = cursor.fetchall()
+  conn.close()
+  filtered_results = []
+  for row in rows:
+    try:
+      p_id = row[0]
+      p_name = decrypt_data(row[1]).decode()
+      p_age = decrypt_data(row[2]).decode()
+      p_xray_clean = decrypt_data(row[3]) if row[3] else None
+      if user_input.isdigit():
+        if int(user_input) == p_id:
+          filtered_results.append((p_id, p_name, p_age, p_xray_clean))
+      elif user_input in p_name.lower():
+          filtered_results.append((p_id, p_name, p_age, p_xray_clean))
+    except Exception:
+      continue 
+  return filtered_results

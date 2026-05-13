@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+import base64
 from patient_manager import process_patient_data, save_patient_to_db, create_db, search_patient
 create_db()
 
@@ -28,7 +29,7 @@ def submit_data():
     result_label.config(text=f"Success!\nPatient Name: {clean_name}, Patient Age: {clean_age} \nPatient ID: P{new_id}", fg="green")
     upload_button.config(text="Upload X-Ray Image", fg="black")
 
-#The search function to find patients by name or ID, which is called when the user clicks the search button
+#The search function to find patients by name or ID, which is called when the user clicks the Enter button
 def search_input():
     user_input = search_box.get()
     if not user_input.strip():
@@ -38,13 +39,24 @@ def search_input():
     if results:
         result_text = "Search Results:\n" + "\n".join([f"ID: P{row[0]}, Name: {row[1]}, Age: {row[2]}" for row in results])
         search_result_label.config(text=result_text, fg="green")
+        if results[0][3]:
+            try:
+                # Convert raw bytes to Base64 so Tkinter can read it
+                b64_data = base64.b64encode(results[0][3])
+                photo = tk.PhotoImage(data=b64_data)
+                display_xray.config(image=photo, text="") 
+                display_xray.image = photo
+            except Exception:
+                search_result_label.config(text="Error: Could not render image.", fg="red")
+        else:
+            display_xray.config(image="", text="No X-ray on file.")
     else:
-        search_result_label.config(text="No patients found matching the search criteria.", fg="blue")
+        search_result_label.config(text="No patients found matching the search criteria.", fg="blue")     
 
 #The main GUI code for the application
 app = tk.Tk()
 app.title("Dentikonnect")
-app.geometry("375x350")
+app.geometry("375x600")
 name_input = tk.Entry(app)
 name_input.grid(row=0, column=1, padx=20, pady=10, sticky="ew")
 name_label = tk.Label(app, text="What is the Patient's Name?:")
@@ -66,4 +78,6 @@ search_label = tk.Label(app, text="Search by Name or ID:")
 search_label.grid(row=5, column=0, padx=20, pady=10, sticky="w")
 search_result_label = tk.Label(app, text="", wraplength=400)
 search_result_label.grid(row=6, column=0, columnspan=2, padx=20, pady=10)
+display_xray = tk.Label(app, text="[ X-Ray View ]", bg="black", fg="white")
+display_xray.grid(row=7, column=0, columnspan=2, padx=20, pady=10)
 app.mainloop()
