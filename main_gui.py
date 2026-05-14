@@ -2,6 +2,12 @@ import tkinter as tk
 from tkinter import filedialog, font
 import base64
 from patient_manager import process_patient_data, save_patient_to_db, create_db, search_patient
+import ctypes
+
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except Exception:
+    pass
 
 #Function to create the database if it doesn't exist, which is called at the start of the application
 create_db()
@@ -46,7 +52,10 @@ def search_input():
                 # Convert raw bytes to Base64 so Tkinter can read it
                 b64_data = base64.b64encode(results[0][3])
                 photo = tk.PhotoImage(data=b64_data)
-                shrunk_photo = photo.subsample(max(1, photo.width() // 300), max(1, photo.height() // 300)) # The image will now be resized to fit within a 300x300 box while maintaining aspect ratio
+                width_factor = photo.width() // 300
+                height_factor = photo.height() // 300
+                scale_factor = max(1, width_factor, height_factor)
+                shrunk_photo = photo.subsample(scale_factor, scale_factor) # The image will now be resized to fit within a 300x300 box while maintaining aspect ratio
                 display_xray.config(image=shrunk_photo, text="") 
                 display_xray.image = shrunk_photo
             except Exception:
@@ -59,12 +68,12 @@ def search_input():
 #The main GUI code for the application
 app = tk.Tk()
 current_dpi = app.winfo_fpixels('1i')
-scaling_factor = current_dpi / 72.0
+scaling_factor = current_dpi / 77.0
 app.tk.call('tk', 'scaling', scaling_factor)
 default_font = font.nametofont("TkDefaultFont")
-default_font.configure(size=int(10 * scaling_factor))
+default_font.configure(size=int(9 * scaling_factor))
 app.title("Dentikonnect")
-app.geometry("375x750")
+app.geometry("400x750")
 name_input = tk.Entry(app)
 name_input.grid(row=0, column=1, padx=20, pady=10, sticky="ew")
 name_label = tk.Label(app, text="What is the Patient's Name?:")
@@ -81,7 +90,7 @@ submit_button = tk.Button(app, text="Submit", command=submit_data)
 submit_button.grid(row=4, column=0, columnspan=2, pady=10)
 search_box = tk.Entry(app)
 search_box.grid(row=5, column=1, padx=20, pady=10, sticky="ew")
-search_box.bind('<Return>', lambda event: search_input())
+search_box.bind('<Return>', lambda _: search_input())
 search_label = tk.Label(app, text="Search by Name or ID:")
 search_label.grid(row=5, column=0, padx=20, pady=10, sticky="w")
 search_result_label = tk.Label(app, text="", wraplength=400)
