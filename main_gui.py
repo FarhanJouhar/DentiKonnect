@@ -1,14 +1,7 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, font
 import base64
-import ctypes
 from patient_manager import process_patient_data, save_patient_to_db, create_db, search_patient
-
-# Set DPI awareness for better display on high-resolution screens
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except Exception:
-    pass
 
 #Function to create the database if it doesn't exist, which is called at the start of the application
 create_db()
@@ -65,6 +58,11 @@ def search_input():
 
 #The main GUI code for the application
 app = tk.Tk()
+current_dpi = app.winfo_fpixels('1i')
+scaling_factor = current_dpi / 72.0
+app.tk.call('tk', 'scaling', scaling_factor)
+default_font = font.nametofont("TkDefaultFont")
+default_font.configure(size=int(10 * scaling_factor))
 app.title("Dentikonnect")
 app.geometry("375x750")
 name_input = tk.Entry(app)
