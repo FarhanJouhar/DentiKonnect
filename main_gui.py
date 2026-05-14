@@ -1,7 +1,16 @@
 import tkinter as tk
 from tkinter import filedialog
 import base64
+import ctypes
 from patient_manager import process_patient_data, save_patient_to_db, create_db, search_patient
+
+# Set DPI awareness for better display on high-resolution screens
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except Exception:
+    pass
+
+#Function to create the database if it doesn't exist, which is called at the start of the application
 create_db()
 
 #Function to upload the xray image
@@ -44,8 +53,9 @@ def search_input():
                 # Convert raw bytes to Base64 so Tkinter can read it
                 b64_data = base64.b64encode(results[0][3])
                 photo = tk.PhotoImage(data=b64_data)
-                display_xray.config(image=photo, text="") 
-                display_xray.image = photo
+                shrunk_photo = photo.subsample(max(1, photo.width() // 300), max(1, photo.height() // 300)) # The image will now be resized to fit within a 300x300 box while maintaining aspect ratio
+                display_xray.config(image=shrunk_photo, text="") 
+                display_xray.image = shrunk_photo
             except Exception:
                 search_result_label.config(text="Error: Could not render image.", fg="red")
         else:
@@ -56,7 +66,7 @@ def search_input():
 #The main GUI code for the application
 app = tk.Tk()
 app.title("Dentikonnect")
-app.geometry("375x600")
+app.geometry("375x750")
 name_input = tk.Entry(app)
 name_input.grid(row=0, column=1, padx=20, pady=10, sticky="ew")
 name_label = tk.Label(app, text="What is the Patient's Name?:")
