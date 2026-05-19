@@ -22,6 +22,12 @@ def create_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             age INTEGER,
+            gender TEXT,
+            cc TEXT,
+            hpi TEXT,
+            pmh TEXT,
+            ph TEXT,  
+            pd TEXT,                          
             xray BLOB
         )
     """)
@@ -32,18 +38,24 @@ def create_db():
     conn.commit()
     conn.close()
 
-#Saves the patient data to the database, including the name, age, and x-ray image
-def save_patient_to_db(name, age, xray_blob):
+#Saves the patient data to the database, including the name, age, gender, other details and  x-ray image
+def save_patient_to_db(name, age, gender, cc, hpi, pmh, ph, pd, xray_blob):
     # Encrypt everything
     enc_name = encrypt_data(name.encode()) 
     enc_age = encrypt_data(str(age).encode())
+    enc_gender = encrypt_data(gender.encode())
+    enc_cc = encrypt_data(cc.encode()) if cc else None
+    enc_hpi = encrypt_data(hpi.encode()) if hpi else None
+    enc_pmh = encrypt_data(pmh.encode()) if pmh else None
+    enc_ph = encrypt_data(ph.encode()) if ph else None
+    enc_pd = encrypt_data(pd.encode()) if pd else None
     enc_xray = encrypt_data(xray_blob) if xray_blob else None
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO patients (name, age, xray)
-        VALUES (?, ?, ?)
-    """, (enc_name, enc_age, enc_xray))
+        INSERT INTO patients (name, age, gender, cc, hpi, pmh, ph, pd, xray)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, enc_xray))
     #Get the ID of the newly inserted patient record
     patient_id = cursor.lastrowid
     conn.commit()
@@ -90,7 +102,7 @@ def decrypt_data(encoded_data):
 def search_patient(user_input):
   conn = get_db_connection()
   cursor = conn.cursor()
-  cursor.execute("SELECT id, name, age, xray FROM patients")
+  cursor.execute("SELECT id, name, age, gender, cc, hpi, pmh, ph, pd, xray FROM patients")
   rows = cursor.fetchall()
   conn.close()
   filtered_results = []
@@ -99,12 +111,18 @@ def search_patient(user_input):
       p_id = row[0]
       p_name = decrypt_data(row[1]).decode()
       p_age = decrypt_data(row[2]).decode()
-      p_xray_clean = decrypt_data(row[3]) if row[3] else None
+      p_gender = decrypt_data(row[3]).decode()
+      p_cc = decrypt_data(row[4]).decode() if row[4] else None
+      p_hpi = decrypt_data(row[5]).decode() if row[5] else None
+      p_pmh = decrypt_data(row[6]).decode() if row[6] else None
+      p_ph = decrypt_data(row[7]).decode() if row[7] else None  
+      p_pd = decrypt_data(row[8]).decode() if row[8] else None
+      p_xray_clean = decrypt_data(row[9]) if row[9] else None
       if user_input.isdigit():
         if int(user_input) == p_id:
-          filtered_results.append((p_id, p_name, p_age, p_xray_clean))
+          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean))
       elif user_input in p_name.lower():
-          filtered_results.append((p_id, p_name, p_age, p_xray_clean))
+          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean))
     except Exception:
       continue 
   return filtered_results

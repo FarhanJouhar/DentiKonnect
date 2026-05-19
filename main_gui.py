@@ -15,7 +15,7 @@ create_db()
 #Function to upload the xray image
 def upload_image():
     global current_xray_path
-    path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.png *.jpeg")])
+    path = filedialog.askopenfilename(filetypes=[("PNG files", "*.png")])
     if path:
         current_xray_path = path
         upload_button.config(text="Image Selected", fg="blue")
@@ -33,8 +33,14 @@ def submit_data():
     if 'current_xray_path' in globals() and current_xray_path:
       with open(current_xray_path, "rb") as file:
         xray_blob = file.read()
-    new_id = save_patient_to_db(clean_name, clean_age, xray_blob)
-    result_label.config(text=f"Success!\nPatient Name: {clean_name}, Patient Age: {clean_age} \nPatient ID: P{new_id}", fg="green")
+    gender = gender_var.get()
+    cc = complaint_input.get("1.0", tk.END).strip() #chief complaint
+    hpi = history_input.get("1.0", tk.END).strip() #history of present illness
+    pmh = Medical_history_input.get("1.0", tk.END).strip() #past medical history
+    ph = Personal_history_input.get("1.0", tk.END).strip() #personal history
+    pd = prov_diag_input.get().strip() #provisional diagnosis
+    new_id = save_patient_to_db(clean_name, clean_age, gender, cc, hpi, pmh, ph, pd, xray_blob)
+    result_label.config(text=f"Success!\nPatient Name: {clean_name}, Patient Age: {clean_age}, Patient Gender: {gender} \nPatient ID: P{new_id}", fg="green")
     upload_button.config(text="Upload X-Ray Image", fg="black")
 
 #The search function to find patients by name or ID, which is called when the user clicks the Enter button
@@ -45,12 +51,12 @@ def search_input():
         return
     results = search_patient(user_input)
     if results:
-        result_text = "Search Results:\n" + "\n".join([f"ID: P{row[0]}, Name: {row[1]}, Age: {row[2]}" for row in results])
+        result_text = "Search Results:\n" + "\n".join([f"ID: P{row[0]}, Name: {row[1]}, Age: {row[2]}, Gender: {row[3]}" for row in results])
         search_result_label.config(text=result_text, fg="green")
-        if results[0][3]:
+        if results[0][9]:
             try:
                 # Convert raw bytes to Base64 so Tkinter can read it
-                b64_data = base64.b64encode(results[0][3])
+                b64_data = base64.b64encode(results[0][9])
                 photo = tk.PhotoImage(data=b64_data)
                 width_factor = photo.width() // 300
                 height_factor = photo.height() // 300
@@ -73,7 +79,7 @@ app.tk.call('tk', 'scaling', scaling_factor)
 default_font = font.nametofont("TkDefaultFont")
 default_font.configure(size=int(9 * scaling_factor))
 app.title("Dentikonnect")
-app.geometry("850x750")
+app.geometry("920x1080")
 name_input = tk.Entry(app)
 name_input.grid(row=0, column=1, padx=20, pady=10, sticky="ew")
 name_label = tk.Label(app, text="Patient's Name:")
@@ -82,31 +88,45 @@ age_input = tk.Entry(app)
 age_input.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 age_label = tk.Label(app, text="Patient's Age:")
 age_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+gender_var = tk.StringVar(app)
+gender_var.set("Select Gender")
+gender_input = tk.OptionMenu(app, gender_var, "Male", "Female", "Other")
+gender_input.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
+gender_label = tk.Label(app, text="Patient's Gender:")
+gender_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
 complaint_input = tk.Text(app , height=4)
-complaint_input.grid(row=2, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
+complaint_input.grid(row=3, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
 complaint_label = tk.Label(app, text="Chief Complaint:")
-complaint_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+complaint_label.grid(row=3, column=0, padx=20, pady=10, sticky="w")
 history_input = tk.Text(app , height=4)
-history_input.grid(row=5, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
+history_input.grid(row=6, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
 history_label = tk.Label(app, text="History of Present Illness:")
-history_label.grid(row=5, column=0, padx=20, pady=10, sticky="w")
+history_label.grid(row=6, column=0, padx=20, pady=10, sticky="w")
+Medical_history_input = tk.Text(app , height=4)
+Medical_history_input.grid(row=9, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
+Medical_history_label = tk.Label(app, text="Past Medical History:")
+Medical_history_label.grid(row=9, column=0, padx=20, pady=10, sticky="w")
+Personal_history_input = tk.Text(app , height=4)
+Personal_history_input.grid(row=12, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
+Personal_history_label = tk.Label(app, text="Personal History:")
+Personal_history_label.grid(row=12, column=0, padx=20, pady=10, sticky="w")
 prov_diag_input = tk.Entry(app)
-prov_diag_input.grid(row=8, column=1, padx=20, pady=10, sticky="ew")
+prov_diag_input.grid(row=15, column=1, padx=20, pady=10, sticky="ew")
 prov_diag_label = tk.Label(app, text="Provisional Diagnosis:")
-prov_diag_label.grid(row=8, column=0, padx=20, pady=10, sticky="w")
+prov_diag_label.grid(row=15, column=0, padx=20, pady=10, sticky="w")
 result_label = tk.Label(app, text="", wraplength=400)
-result_label.grid(row=9, column=0, columnspan=2, padx=20, pady=10)
+result_label.grid(row=16, column=0, columnspan=2, padx=20, pady=10)
 upload_button = tk.Button(app, text="Upload X-Ray Image", command=upload_image)
-upload_button.grid(row=10, column=0, columnspan=2, pady=10)
+upload_button.grid(row=17, column=0, columnspan=2, pady=10)
 submit_button = tk.Button(app, text="Submit", command=submit_data)
-submit_button.grid(row=11, column=0, columnspan=2, pady=10)
+submit_button.grid(row=18, column=0, columnspan=2, pady=10)
 search_box = tk.Entry(app)
-search_box.grid(row=12, column=1, padx=20, pady=10, sticky="ew")
+search_box.grid(row=19, column=1, padx=20, pady=10, sticky="ew")
 search_box.bind('<Return>', lambda _: search_input())
 search_label = tk.Label(app, text="Search by Name or ID:")
-search_label.grid(row=12, column=0, padx=20, pady=10, sticky="w")
+search_label.grid(row=19, column=0, padx=20, pady=10, sticky="w")
 search_result_label = tk.Label(app, text="", wraplength=400)
-search_result_label.grid(row=13, column=0, columnspan=2, padx=20, pady=10)
+search_result_label.grid(row=20, column=0, columnspan=2, padx=20, pady=10)
 display_xray = tk.Label(app, text="[ X-Ray View ]", bg="black", fg="white")
-display_xray.grid(row=14, column=0, columnspan=2, padx=20, pady=10)
+display_xray.grid(row=21, column=0, columnspan=2, padx=20, pady=10)
 app.mainloop()
