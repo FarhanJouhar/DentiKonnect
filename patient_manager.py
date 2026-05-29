@@ -49,13 +49,12 @@ def save_patient_to_db(name, age, gender, cc, hpi, pmh, ph, pd, xray_blob):
     enc_pmh = encrypt_data(pmh.encode()) if pmh else None
     enc_ph = encrypt_data(ph.encode()) if ph else None
     enc_pd = encrypt_data(pd.encode()) if pd else None
-    enc_xray = encrypt_data(xray_blob) if xray_blob else None
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO patients (name, age, gender, cc, hpi, pmh, ph, pd, xray)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, enc_xray))
+    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, xray_blob))
     #Get the ID of the newly inserted patient record
     patient_id = cursor.lastrowid
     conn.commit()
@@ -126,3 +125,22 @@ def search_patient(user_input):
     except Exception:
       continue 
   return filtered_results
+
+#Function to upload the x-ray image to the patient's profile after encryption, which is called when the user clicks the "Save X-Ray" button
+def save_patient_xray(patient_id, xray_path):
+    try:
+        with open(xray_path, "rb") as file:
+            xray_blob = file.read()
+        enc_xray = encrypt_data(xray_blob)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE patients 
+            SET xray = ? 
+            WHERE id = ?
+        """, (enc_xray, patient_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        return str(e)
