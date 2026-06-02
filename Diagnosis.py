@@ -2,6 +2,8 @@
 #Diagnosis Tab
 #============================================================================================
 import tkinter as tk
+from patient_manager import search_patient
+import base64
 
 doctor_login = False
 
@@ -19,6 +21,37 @@ def diagnosis_tab(notebook):
         else:
             auth_status_label.config(text="Invalid Password! Access Denied.", fg="red")
 
+    def diagnosis_search():
+        global current_patient_id
+        user_input = search_box.get()
+        if not user_input.strip():
+            search_result_label.config(text="Error: Search input cannot be blank", fg="red")
+            return
+        results = search_patient(user_input)
+        if results:
+            current_patient_id = results[0][0]
+            result_text = "Search Results:\n" + "\n".join([f"ID: P{row[0]}, Name: {row[1]}, Age: {row[2]}, Gender: {row[3]}" for row in results])
+            search_result_label.config(text=result_text, fg="green")
+            if results[0][9]:
+                try:
+                    # Convert raw bytes to Base64 so Tkinter can read it
+                    b64_data = base64.b64encode(results[0][9])
+                    photo = tk.PhotoImage(data=b64_data)
+                    width_factor = photo.width() // 300
+                    height_factor = photo.height() // 300
+                    scale_factor = max(1, width_factor, height_factor)
+                    shrunk_photo = photo.subsample(scale_factor, scale_factor) # The image will now be resized to fit within a 300x300 box while maintaining aspect ratio
+                    display_xray.config(image=shrunk_photo, text="") 
+                    display_xray.image = shrunk_photo
+                except Exception:
+                    search_result_label.config(text="Error: Could not render image.", fg="red")
+            else:
+                display_xray.config(image="", text="No X-ray on file.")
+        else:
+            search_result_label.config(text="No patients found matching the search criteria.", fg="blue")
+            current_patient_id = None
+
+
     diagnosis_tab = tk.Frame(notebook)
     notebook.add(diagnosis_tab, text="Diagnosis")
     auth_frame = tk.Frame(diagnosis_tab)
@@ -31,9 +64,14 @@ def diagnosis_tab(notebook):
     auth_status_label.pack(pady=5)
     unlock_button = tk.Button(auth_frame, text="Unlock Records", command=unlock_patient_data)
     unlock_button.pack(pady=10)
-    tk.Label(data_frame, text="Enter Patient ID:").grid(row=1, column=0, sticky="w", padx=10, pady=10)
-    diag_search_input = tk.Entry(data_frame, width=15)
-    diag_search_input.grid(row=1, column=1, sticky="w", padx=5, pady=10)
-    tk.Label(data_frame, text="Enter Patient Name:").grid(row=2, column=0, sticky="w", padx=10, pady=10)
-    diag_search_name = tk.Entry(data_frame, width=15)
-    diag_search_name.grid(row=2, column=1, sticky="w", padx=5, pady=10)
+    search_box = tk.Entry(data_frame)
+    search_box.grid(row=0, column=1, padx=20, pady=10, sticky="ew")
+    search_box.bind('<Return>', lambda _: diagnosis_search())
+    search_label = tk.Label(data_frame, text="Search by Name or ID:")
+    search_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+    search_label = tk.Label(data_frame, text="Search by Name or ID:")
+    search_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+    search_result_label = tk.Label(data_frame, text="", wraplength=400)
+    search_result_label.grid(row=1, column=0, columnspan=2, padx=20, pady=10)
+    display_xray = tk.Label(data_frame, text="[ X-Ray View ]", bg="black", fg="white")
+    display_xray.grid(row=21, column=0, columnspan=2, padx=20, pady=10)
