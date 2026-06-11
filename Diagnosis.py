@@ -21,6 +21,22 @@ def diagnosis_tab(notebook):
         else:
             auth_status_label.config(text="Invalid Password! Access Denied.", fg="red")
 
+    def populate_fields(patient_row):
+        if patient_row:
+            name_field.config(state="normal")
+            name_field.delete(0, tk.END)
+            name_field.insert(0, patient_row[1])
+            name_field.config(state="readonly")
+            age_field.config(state="normal")
+            age_field.delete(0, tk.END)
+            age_field.insert(0, patient_row[2])
+            age_field.config(state="readonly")
+            gender_field.config(state="normal")
+            gender_field.delete(0, tk.END)
+            gender_field.insert(0, patient_row[3])
+            gender_field.config(state="readonly")
+            
+
     def diagnosis_search():
         global current_patient_id
         user_input = search_box.get()
@@ -30,7 +46,8 @@ def diagnosis_tab(notebook):
         results = search_patient(user_input)
         if results:
             current_patient_id = results[0][0]
-            result_text = "Search Results:\n" + "\n".join([f"ID: P{row[0]}, Name: {row[1]}, Age: {row[2]}, Gender: {row[3]}" for row in results])
+            populate_fields(results[0])
+            result_text = f"Search Results: Patient ID: P{current_patient_id} Successfully Loaded"
             search_result_label.config(text=result_text, fg="green")
             if results[0][9]:
                 try:
@@ -73,5 +90,17 @@ def diagnosis_tab(notebook):
     search_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
     search_result_label = tk.Label(data_frame, text="", wraplength=400)
     search_result_label.grid(row=1, column=0, columnspan=2, padx=20, pady=10)
+    name_field = tk.Entry(data_frame, state="readonly", width=30)
+    name_field.grid(row=2, column=1, padx=20, pady=10, sticky="w")
+    name_label = tk.Label(data_frame, text="Patient Name:")
+    name_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+    age_field = tk.Entry(data_frame, state="readonly", width=30)
+    age_field.grid(row=3, column=1, padx=20, pady=10, sticky="w")
+    age_label = tk.Label(data_frame, text="Patient Age:")
+    age_label.grid(row=3, column=0, padx=20, pady=10, sticky="w")
+    gender_field = tk.Entry(data_frame, state="readonly", width=30)
+    gender_field.grid(row=4, column=1, padx=20, pady=10, sticky="w")
+    gender_label = tk.Label(data_frame, text="Patient Gender:")
+    gender_label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
     display_xray = tk.Label(data_frame, text="[ X-Ray View ]", bg="black", fg="white")
     display_xray.grid(row=21, column=0, columnspan=2, padx=20, pady=10)
