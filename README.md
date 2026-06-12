@@ -30,10 +30,11 @@ A XOR Cipher is applied to all data before it is committed to the database.
 
 # Project Structure
 
+```
 main_gui.py              — Entry point and GUI
 patient_manager.py       — DB connections, XOR encryption
 Patient_Registration.py  — Registration tab for new patients(Reception or initial case history)
 Radiology.py             — Radiology tab (Used by Radiology or a lab to upload X-rays as required)
 Diagnosis.py             — Diagnosis tab for the clinic to edit and view patient info
 Database/                — Auto-created on first save; holds DentiKonnect.db
-screenshots/             — UI screenshots for each module
+```
