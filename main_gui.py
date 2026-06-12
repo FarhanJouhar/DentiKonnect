@@ -11,7 +11,6 @@ try:
 except Exception:
     pass
 
-#Function to create the database if it doesn't exist, which is called at the start of the application
 create_db()
 
 #The main GUI code for the application

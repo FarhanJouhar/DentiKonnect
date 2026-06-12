@@ -3,6 +3,7 @@
 This was due to the need for better data management and scalability as the application grows in scope
 sqlite3 was used instead of SQLcypher because it is a built-in library in python, making the application lightweight. 
 However, there is a lack of encryption in sqlite3, which will be a concern for future development and will be addressed later"""
+
 import sqlite3
 import os
 import base64
@@ -82,6 +83,7 @@ def process_patient_data(name, age):
 #For this university prototype, a static XOR key is used.
 #In a production environment, this would be replaced with AES-256 
 #and the key would be managed via an environment variable or Vault.
+
 SECRET_KEY = "THD_DNTIKNKT_ENCR_2026"
 
 def xor_cipher(data, key):
