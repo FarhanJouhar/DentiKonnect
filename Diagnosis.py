@@ -2,7 +2,7 @@
 #Diagnosis Tab
 #============================================================================================
 import tkinter as tk
-from patient_manager import search_patient
+from patient_manager import search_patient, update_diagnosis
 import base64
 
 doctor_login = False
@@ -56,7 +56,21 @@ def diagnosis_tab(notebook):
             pd_field.delete(1.0, tk.END)
             pd_field.insert(1.0, patient_row[8] if patient_row[8] else "")
             pd_field.config(state="disabled")
-            
+            fd_field.config(state="normal")
+            fd_field.delete(1.0, tk.END)
+            if patient_row[10] and str(patient_row[10]).strip():#The final diagnosis and treatment plan fields will only be edittable if empty.
+                fd_field.insert(1.0, patient_row[10])
+                fd_field.config(state="disabled")
+            else:
+                fd_field.config(state="normal")
+            tp_field.config(state="normal")
+            tp_field.delete(1.0, tk.END)
+            if patient_row[11] and str(patient_row[11]).strip():#Same as above
+                tp_field.insert(1.0, patient_row[11])
+                tp_field.config(state="disabled")
+            else:
+                tp_field.config(state="normal")
+
     #Function to search for a patient and display their information
     def diagnosis_search():
         global current_patient_id
@@ -89,6 +103,22 @@ def diagnosis_tab(notebook):
             search_result_label.config(text="No patients found matching the search criteria.", fg="blue")
             current_patient_id = None
 
+    def save_diagnosis_and_treatment():
+        global current_patient_id
+        if not current_patient_id:
+            search_result_label.config(text="Error: Please search for a patient first.", fg="red")
+            return
+        fd = fd_field.get("1.0", tk.END).strip()
+        tp = tp_field.get("1.0", tk.END).strip()
+        if not fd or not tp:
+            search_result_label.config(text="Error: Final Diagnosis and Treatment Plan cannot be empty.", fg="red")
+            return
+        success = update_diagnosis(current_patient_id, fd, tp)
+        if success is True:
+            search_result_label.config(text="Success: Final Diagnosis and Treatment Plan updated!", fg="green")
+        else:
+            search_result_label.config(text=f"Error: {success}", fg="red")        
+
     #The code to create the diagnosis tab with authentication and search functionality
     diagnosis_tab = tk.Frame(notebook)
     notebook.add(diagnosis_tab, text="Diagnosis")
@@ -101,6 +131,8 @@ def diagnosis_tab(notebook):
     left_data_frame.grid(row=1, column=0, padx=10)
     right_data_frame = tk.Frame(data_frame)
     right_data_frame.grid(row=1, column=1, padx=10, sticky="n")
+    submit_button_frame = tk.Frame(data_frame)
+    submit_button_frame.grid(row=2, column=0, columnspan=2, pady=10)
     tk.Label(auth_frame, text="Medical Staff Authentication Required", fg="red").pack(pady=10)
     password_input = tk.Entry(auth_frame, show="*", width=20)
     password_input.pack(pady=5)
@@ -148,6 +180,16 @@ def diagnosis_tab(notebook):
     pd_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
     pd_field.grid(row=9, column=1, padx=20, pady=10, sticky="w")
     pd_label = tk.Label(left_data_frame, text="Provisional Diagnosis:")
-    pd_label.grid(row=9, column=0, padx=20, pady=10, sticky="w")    
+    pd_label.grid(row=9, column=0, padx=20, pady=10, sticky="w") 
+    fd_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    fd_field.grid(row=10, column=1, padx=20, pady=10, sticky="w")
+    fd_label = tk.Label(left_data_frame, text="Final Diagnosis:")
+    fd_label.grid(row=10, column=0, padx=20, pady=10, sticky="w")
+    tp_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    tp_field.grid(row=11, column=1, padx=20, pady=10, sticky="w")
+    tp_label = tk.Label(left_data_frame, text="Treatment Plan:")
+    tp_label.grid(row=11, column=0, padx=20, pady=10, sticky="w")
     display_xray = tk.Label(right_data_frame, text="[ X-Ray View ]", bg="black", fg="white")
     display_xray.grid(row=0, column=0, columnspan=2, padx=20, pady=10)
+    submit_button = tk.Button(submit_button_frame, text="Save Diagnosis & Treatment Plan", command=save_diagnosis_and_treatment)
+    submit_button.grid(row=0, column=0, pady=10)

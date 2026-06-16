@@ -28,7 +28,9 @@ def create_db():
             hpi TEXT,
             pmh TEXT,
             ph TEXT,  
-            pd TEXT,                          
+            pd TEXT,
+            fd TEXT,
+            tp TEXT,                                        
             xray BLOB
         )
     """)
@@ -53,9 +55,9 @@ def save_patient_to_db(name, age, gender, cc, hpi, pmh, ph, pd, xray_blob):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO patients (name, age, gender, cc, hpi, pmh, ph, pd, xray)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, xray_blob))
+        INSERT INTO patients (name, age, gender, cc, hpi, pmh, ph, pd, xray, fd, tp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, xray_blob, None, None))
     #Get the ID of the newly inserted patient record
     patient_id = cursor.lastrowid
     conn.commit()
@@ -103,7 +105,7 @@ def decrypt_data(encoded_data):
 def search_patient(user_input):
   conn = get_db_connection()
   cursor = conn.cursor()
-  cursor.execute("SELECT id, name, age, gender, cc, hpi, pmh, ph, pd, xray FROM patients")
+  cursor.execute("SELECT id, name, age, gender, cc, hpi, pmh, ph, pd, xray, fd, tp FROM patients")
   rows = cursor.fetchall()
   conn.close()
   filtered_results = []
@@ -119,11 +121,13 @@ def search_patient(user_input):
       p_ph = decrypt_data(row[7]).decode() if row[7] else None  
       p_pd = decrypt_data(row[8]).decode() if row[8] else None
       p_xray_clean = decrypt_data(row[9]) if row[9] else None
+      p_fd = decrypt_data(row[10]) if row[10] else None
+      p_tp = decrypt_data(row[11]) if row[11] else None
       if user_input.isdigit():
         if int(user_input) == p_id:
-          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean))
+          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean, p_fd, p_tp))
       elif user_input in p_name.lower():
-          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean))
+          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean, p_fd, p_tp))
     except Exception:
       continue 
   return filtered_results
@@ -141,6 +145,24 @@ def save_patient_xray(patient_id, xray_path):
             SET xray = ? 
             WHERE id = ?
         """, (enc_xray, patient_id))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        return str(e)
+    
+#Function to update final diagnosis and treatment plan, from the diagnosis tab
+def update_diagnosis(patient_id, fd, tp):
+    try:
+        enc_fd = encrypt_data(fd.encode())
+        enc_tp = encrypt_data(tp.encode())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE patients 
+            SET fd = ?, tp = ? 
+            WHERE id = ?
+        """, (enc_fd, enc_tp, patient_id))
         conn.commit()
         conn.close()
         return True
