@@ -23,7 +23,7 @@ app.tk.call('tk', 'scaling', scaling_factor)
 default_font = font.nametofont("TkDefaultFont")
 default_font.configure(size=int(9 * scaling_factor))
 app.title("Dentikonnect")
-app.geometry("880x920")
+app.geometry("1000x1000")
 
 registration_tab(notebook)
 Radiology_tab(notebook)
