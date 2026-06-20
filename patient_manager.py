@@ -65,7 +65,7 @@ def save_patient_to_db(name, age, gender, cc, hpi, pmh, ph, pd, xray_blob):
     return patient_id
 
 #Validates all inputs to make sure they are correct and properly formatted      
-def process_patient_data(name, age):
+def process_patient_data(name, age, gender):
   if not name.strip():
     return "Error: Name cannot be blank" 
   if name.isdigit():
@@ -76,10 +76,12 @@ def process_patient_data(name, age):
     return "Error: Age must be a number (e.g., 25)"
   if age.startswith("0") and age != "0":
     return "Error: Age cannot start with a zero (e.g., 25, not 025)"
-  if int(age) <= 0:
+  if int(age) <= 0 or int(age) > 120:
     return "Error: Please enter a valid age! (e.g., 25)"
+  if gender == "Select Gender":
+    return "Error: Please select a valid gender"
   name = name.title()
-  return name, age
+  return name, age, gender
 
 #We will be trying a simple XOR cipher for encrypting the patient data, which is not the most secure method but serves as a basic example of encryption.
 #For this university prototype, a static XOR key is used.
