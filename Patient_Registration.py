@@ -5,6 +5,9 @@ import tkinter as tk
 from tkinter import ttk
 from patient_manager import process_patient_data, save_patient_to_db
 
+Medical_BG = "#FFFFFF"
+Text_Colour = "#2D3748"
+
 #Function to create the patient registration tab with all the necessary input fields and labels
 def registration_tab(notebook):
     #Function to submit the data after going through process_patient_data for validation and then to database using save_patient_to_db
@@ -41,19 +44,19 @@ def registration_tab(notebook):
     gender_input.grid(row=2, column=1, padx=20, pady=10, sticky="ew")
     gender_label = ttk.Label(entry_tab, text="Patient's Gender:")
     gender_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
-    complaint_input = tk.Text(entry_tab , height=4)
+    complaint_input = tk.Text(entry_tab , height=4, background=Medical_BG, foreground=Text_Colour)
     complaint_input.grid(row=3, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
     complaint_label = ttk.Label(entry_tab, text="Chief Complaint:")
     complaint_label.grid(row=3, column=0, padx=20, pady=10, sticky="w")
-    history_input = tk.Text(entry_tab , height=4)
+    history_input = tk.Text(entry_tab , height=4, background=Medical_BG, foreground=Text_Colour)
     history_input.grid(row=6, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
     history_label = ttk.Label(entry_tab, text="History of Present Illness:")
     history_label.grid(row=6, column=0, padx=20, pady=10, sticky="w")
-    Medical_history_input = tk.Text(entry_tab , height=4)
+    Medical_history_input = tk.Text(entry_tab , height=4, background=Medical_BG, foreground=Text_Colour)
     Medical_history_input.grid(row=9, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
     Medical_history_label = ttk.Label(entry_tab, text="Past Medical History:")
     Medical_history_label.grid(row=9, column=0, padx=20, pady=10, sticky="w")
-    Personal_history_input = tk.Text(entry_tab , height=4)
+    Personal_history_input = tk.Text(entry_tab , height=4, background=Medical_BG, foreground=Text_Colour)
     Personal_history_input.grid(row=12, column=1, rowspan=3, columnspan=1, padx=20, pady=10, sticky="ew")
     Personal_history_label = ttk.Label(entry_tab, text="Personal History:")
     Personal_history_label.grid(row=12, column=0, padx=20, pady=10, sticky="w")
