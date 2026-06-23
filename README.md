@@ -28,6 +28,14 @@ A XOR Cipher is applied to all data before it is committed to the database.
 - **Encryption at Rest:** Names and X-rays are stored as Base64-encoded ciphered strings.
 - **Static Key (v1):** Uses a fixed key for demonstration. A production build would replace XOR with AES-256 and implement per-user key derivation.
 
+# Planned Improvements
+
+This is a working prototype. The next development priorities are:
+
+- Replace XOR cipher with AES-256 encryption
+- DICOM support for standard dental radiograph formats (replacing PNG)
+- Visit-based patient records — persistent patient IDs with date-stamped visits, allowing clinicians to track a patient's history across multiple appointments
+
 # Project Structure
 
 ```
