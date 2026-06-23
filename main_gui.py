@@ -18,13 +18,13 @@ app = tk.Tk()
 app.title("Dentikonnect")
 app.minsize(600, 700)
 
-#We will try facelift the GUI a little so it doesn't look like a 90's application. This colour scheme may change in the future
+#We will try to facelift the GUI a little so it doesn't look like a 90's application. This colour scheme may change in the future
 style = ttk.Style()
 style.theme_use('clam')
 Medical_BG = "#F4F6F9"
 Text_Colour = "#2D3748"
 Dental_Teal = "#0D9488"
-style.configure('.', background=Medical_BG, foreground=Text_Colour, font=('Segoe UI', 10))
+style.configure('.', background=Medical_BG, foreground=Text_Colour, font=('Segoe UI', 11))
 app.configure(bg=Dental_Teal)
 style.configure("TNotebook", background=Dental_Teal, bordercolor=Dental_Teal)
 
@@ -34,7 +34,7 @@ current_dpi = app.winfo_fpixels('1i')
 scaling_factor = current_dpi / 77.0
 app.tk.call('tk', 'scaling', scaling_factor)
 default_font = font.nametofont("TkDefaultFont")
-default_font.configure(size=int(9 * scaling_factor))
+default_font.configure(size=int(11 * scaling_factor))
 
 registration_tab(notebook)
 Radiology_tab(notebook)

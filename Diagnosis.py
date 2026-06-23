@@ -6,6 +6,9 @@ from tkinter import ttk
 from patient_manager import search_patient, update_diagnosis
 import base64
 
+Medical_BG = "#FFFFFF"
+Text_Colour = "#2D3748"
+
 doctor_login = False
 
 def diagnosis_tab(notebook):
@@ -162,31 +165,31 @@ def diagnosis_tab(notebook):
     gender_field.grid(row=4, column=1, padx=20, pady=10, sticky="w")
     gender_label = ttk.Label(left_data_frame, text="Patient Gender:")
     gender_label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
-    complaint_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    complaint_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     complaint_field.grid(row=5, column=1, padx=20, pady=10, sticky="w")
     complaint_label = ttk.Label(left_data_frame, text="Chief Complaint:")
     complaint_label.grid(row=5, column=0, padx=20, pady=10, sticky="w")
-    hpi_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    hpi_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     hpi_field.grid(row=6, column=1, padx=20, pady=10, sticky="w")
     hpi_label = ttk.Label(left_data_frame, text="History of Present Illness:")
     hpi_label.grid(row=6, column=0, padx=20, pady=10, sticky="w")
-    pmh_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    pmh_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     pmh_field.grid(row=7, column=1, padx=20, pady=10, sticky="w")
     pmh_label = ttk.Label(left_data_frame, text="Past Medical History:")
     pmh_label.grid(row=7, column=0, padx=20, pady=10, sticky="w")
-    ph_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    ph_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     ph_field.grid(row=8, column=1, padx=20, pady=10, sticky="w")
     ph_label = ttk.Label(left_data_frame, text="Personal History:")
     ph_label.grid(row=8, column=0, padx=20, pady=10, sticky="w")
-    pd_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    pd_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     pd_field.grid(row=9, column=1, padx=20, pady=10, sticky="w")
     pd_label = ttk.Label(left_data_frame, text="Provisional Diagnosis:")
     pd_label.grid(row=9, column=0, padx=20, pady=10, sticky="w") 
-    fd_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    fd_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     fd_field.grid(row=10, column=1, padx=20, pady=10, sticky="w")
     fd_label = ttk.Label(left_data_frame, text="Final Diagnosis:")
     fd_label.grid(row=10, column=0, padx=20, pady=10, sticky="w")
-    tp_field = tk.Text(left_data_frame, state="normal", height=4, width=30)
+    tp_field = tk.Text(left_data_frame, state="normal", height=4, width=30, background=Medical_BG, foreground=Text_Colour)
     tp_field.grid(row=11, column=1, padx=20, pady=10, sticky="w")
     tp_label = ttk.Label(left_data_frame, text="Treatment Plan:")
     tp_label.grid(row=11, column=0, padx=20, pady=10, sticky="w")
