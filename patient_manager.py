@@ -7,12 +7,15 @@ However, there is a lack of encryption in sqlite3, which will be a concern for f
 import sqlite3
 import os
 import base64
+from datetime import datetime
 
 #The database will be stored inside the following Database folder, which is created if it doesn't exist
 def get_db_connection():
     db_dir = "Database"
     os.makedirs(db_dir, exist_ok=True) 
-    return sqlite3.connect(os.path.join(db_dir, "DentiKonnect.db"))
+    conn = sqlite3.connect(os.path.join(db_dir, "DentiKonnect.db"))
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 #Creates the patient table if it doesn't exist and patient ID starts from 1000
 def create_db():
@@ -23,15 +26,26 @@ def create_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             age INTEGER,
-            gender TEXT,
+            gender TEXT
+        )
+    """)
+    #We create a new visits table to store extra patient details 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS visits (    
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            patient_id INTEGER NOT NULL,
+            visit_date TEXT NOT NULL,
             cc TEXT,
             hpi TEXT,
             pmh TEXT,
+            pdh TEXT,       
             ph TEXT,  
             pd TEXT,
             fd TEXT,
-            tp TEXT,                                        
-            xray BLOB
+            tp TEXT,   
+            rx TEXT,                                            
+            xray BLOB,
+            FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE       
         )
     """)
     cursor.execute("SELECT name FROM sqlite_sequence WHERE name='patients'")
@@ -42,27 +56,44 @@ def create_db():
     conn.close()
 
 #Saves the patient data to the database, including the name, age, gender, other details and  x-ray image
-def save_patient_to_db(name, age, gender, cc, hpi, pmh, ph, pd, xray_blob):
+def save_patient_to_db(name, age, gender):
     # Encrypt everything
     enc_name = encrypt_data(name.encode()) 
     enc_age = encrypt_data(str(age).encode())
     enc_gender = encrypt_data(gender.encode())
-    enc_cc = encrypt_data(cc.encode()) if cc else None
-    enc_hpi = encrypt_data(hpi.encode()) if hpi else None
-    enc_pmh = encrypt_data(pmh.encode()) if pmh else None
-    enc_ph = encrypt_data(ph.encode()) if ph else None
-    enc_pd = encrypt_data(pd.encode()) if pd else None
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO patients (name, age, gender, cc, hpi, pmh, ph, pd, xray, fd, tp)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (enc_name, enc_age, enc_gender, enc_cc, enc_hpi, enc_pmh, enc_ph, enc_pd, xray_blob, None, None))
+        INSERT INTO patients (name, age, gender)
+        VALUES (?, ?, ?)
+    """, (enc_name, enc_age, enc_gender))
     #Get the ID of the newly inserted patient record
     patient_id = cursor.lastrowid
     conn.commit()
     conn.close()
     return patient_id
+
+def save_visit_to_db(patient_id, cc, hpi, pmh, pdh, ph, pd, fd, tp, Rx, xray_blob):
+    visit_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    enc_cc = encrypt_data(cc.encode()) if cc else None
+    enc_hpi = encrypt_data(hpi.encode()) if hpi else None
+    enc_pmh = encrypt_data(pmh.encode()) if pmh else None
+    enc_pdh = encrypt_data(pdh.encode()) if pdh else None
+    enc_ph = encrypt_data(ph.encode()) if ph else None
+    enc_pd = encrypt_data(pd.encode()) if pd else None
+    enc_fd = encrypt_data(fd.encode()) if fd else None
+    enc_tp = encrypt_data(tp.encode()) if tp else None
+    enc_Rx = encrypt_data(Rx.encode()) if Rx else None
+    conn = get_db_connection()
+    cursor = conn.cursor() 
+    cursor.execute("""
+        INSERT INTO visits (patient_id, visit_date, cc, hpi, pmh, pdh, ph, pd, fd, tp, Rx, xray)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (patient_id, visit_date, enc_cc, enc_hpi, enc_pmh, enc_pdh, enc_ph, enc_pd, enc_fd, enc_tp, enc_Rx, xray_blob))
+    conn.commit()
+    conn.close()
+    visit_id = cursor.lastrowid
+    return visit_id
 
 #Validates all inputs to make sure they are correct and properly formatted      
 def process_patient_data(name, age, gender):
@@ -107,7 +138,7 @@ def decrypt_data(encoded_data):
 def search_patient(user_input):
   conn = get_db_connection()
   cursor = conn.cursor()
-  cursor.execute("SELECT id, name, age, gender, cc, hpi, pmh, ph, pd, xray, fd, tp FROM patients")
+  cursor.execute("SELECT id, name, age, gender FROM patients")
   rows = cursor.fetchall()
   conn.close()
   filtered_results = []
@@ -117,25 +148,17 @@ def search_patient(user_input):
       p_name = decrypt_data(row[1]).decode()
       p_age = decrypt_data(row[2]).decode()
       p_gender = decrypt_data(row[3]).decode()
-      p_cc = decrypt_data(row[4]).decode() if row[4] else None
-      p_hpi = decrypt_data(row[5]).decode() if row[5] else None
-      p_pmh = decrypt_data(row[6]).decode() if row[6] else None
-      p_ph = decrypt_data(row[7]).decode() if row[7] else None  
-      p_pd = decrypt_data(row[8]).decode() if row[8] else None
-      p_xray_clean = decrypt_data(row[9]) if row[9] else None
-      p_fd = decrypt_data(row[10]) if row[10] else None
-      p_tp = decrypt_data(row[11]) if row[11] else None
       if user_input.isdigit():
         if int(user_input) == p_id:
-          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean, p_fd, p_tp))
+          filtered_results.append((p_id, p_name, p_age, p_gender))
       elif user_input in p_name.lower():
-          filtered_results.append((p_id, p_name, p_age, p_gender, p_cc, p_hpi, p_pmh, p_ph, p_pd, p_xray_clean, p_fd, p_tp))
+          filtered_results.append((p_id, p_name, p_age, p_gender))
     except Exception:
       continue 
   return filtered_results
 
 #Function to upload the x-ray image to the patient's profile after encryption, which is called when the user clicks the "Save X-Ray" button
-def save_patient_xray(patient_id, xray_path):
+def save_patient_xray(visit_id, xray_path):
     try:
         with open(xray_path, "rb") as file:
             xray_blob = file.read()
@@ -143,10 +166,10 @@ def save_patient_xray(patient_id, xray_path):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            UPDATE patients 
+            UPDATE visits 
             SET xray = ? 
             WHERE id = ?
-        """, (enc_xray, patient_id))
+        """, (enc_xray, visit_id))
         conn.commit()
         conn.close()
         return True
@@ -154,17 +177,18 @@ def save_patient_xray(patient_id, xray_path):
         return str(e)
     
 #Function to update final diagnosis and treatment plan, from the diagnosis tab
-def update_diagnosis(patient_id, fd, tp):
+def update_diagnosis(visit_id, fd, tp, rx):
     try:
         enc_fd = encrypt_data(fd.encode())
         enc_tp = encrypt_data(tp.encode())
+        enc_rx = encrypt_data(rx.encode())
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            UPDATE patients 
-            SET fd = ?, tp = ? 
+            UPDATE visits 
+            SET fd = ?, tp = ?, rx = ?
             WHERE id = ?
-        """, (enc_fd, enc_tp, patient_id))
+        """, (enc_fd, enc_tp, enc_rx, visit_id))
         conn.commit()
         conn.close()
         return True
